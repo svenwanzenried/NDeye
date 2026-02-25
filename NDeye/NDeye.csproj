@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <UserSecretsId>994b7c52-2ead-4378-a289-3a4c25672c38</UserSecretsId>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.App"
+                          Version="2.2.8" />
+        <PackageReference Include="Microsoft.Extensions.Hosting"
+                          Version="10.0.3" />
+        <PackageReference Include="NDILibDotNetCoreBase"
+                          Version="2024.7.22.1" />
+        <PackageReference Include="SixLabors.ImageSharp"
+                          Version="3.1.12" />
+        <PackageReference Include="ZXing.Net"
+                          Version="0.16.11" />
+        <PackageReference Include="ZXing.Net.Bindings.ImageSharp.V3"
+                          Version="0.16.18" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="appsettings*json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="libraries\**\*" />
+        <!-- Define for MSBUILD Target operation below -->
+        <LibraryFiles Include="libraries\**\*" />
+    </ItemGroup>
+    <!-- Copy NDI libraries to the output target -->
+    <Target Name="CopyLibrariesToOutput"
+            AfterTargets="Build">
+        <Copy SourceFiles="@(LibraryFiles)"
+              DestinationFolder="$(OutputPath)" />
+    </Target>
+</Project>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TestNdiLib": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
