@@ -1,4 +1,4 @@
-## Intrduction
+## Introduction
 _NDeye_ is a small .NET executable that is able to capture frames from an NDI&trade; source on the Network.
 Additionally, NDeye can find and decode QR codes on the captured frames.
 Both, the image and any found qr contents will be provided to the user as HTTP entpoints.
@@ -14,3 +14,10 @@ Found QR code contents in a given timeframe (default = 1 min) are displayed (lin
 ## Configuration
 The NDI&trade; source name can be passed in appsettings.json, or alternatively as environment variable `Ndi__SourceName`.
 Make sure to give a source name like: `MachineName (SourceName)`. (This is an NDI&trade; convention.)
+
+## Screenshots (of user agent)
+Streaming content with two QR codes and viewing them in http://localhost:5000/snapshot:
+![Webbrowser with snapshot function](screenshots/snapshot.png)
+
+List of QR code contents during last 5 minutes:
+![Webbrowser with snapshot function](screenshots/qr-codes.png)
