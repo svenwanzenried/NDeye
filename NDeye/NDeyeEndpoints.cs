@@ -32,6 +32,15 @@ public static class NDeyeEndpoints
          [FromServices] NdiFrameService svc,
          [FromQuery] bool download = false)
     {
+        context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+        context.Response.Headers.Pragma = "no-cache";
+        context.Response.Headers.Expires = "0";
+
+        if (download is true)
+        {
+            context.Response.Headers.ContentDisposition = "attachment; filename=\"snapshot.png\"";
+        }
+
         if (!svc.IsAvailable)
         {
             return Results.Problem(
@@ -45,15 +54,6 @@ public static class NDeyeEndpoints
         if (img == null)
             return Results.Problem("No frame captured yet", statusCode: 503);
 
-        context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
-        context.Response.Headers.Pragma = "no-cache";
-        context.Response.Headers.Expires = "0";
-
-        if (download is true)
-        {
-            context.Response.Headers.ContentDisposition = "attachment; filename=\"snapshot.png\"";
-        }
-
         return Results.File(img, "image/png");
     }
 
@@ -61,12 +61,17 @@ public static class NDeyeEndpoints
     private static async Task<IResult> QrHandler(
         HttpContext context,
         [FromServices] NdiFrameService svc,
-        [FromQuery] bool redirect = false
+        [FromQuery] bool redirect = false,
+        [FromQuery] bool timestamps = false
     )
     {
+        context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+        context.Response.Headers.Pragma = "no-cache";
+        context.Response.Headers.Expires = "0";
+
         var qrContents = svc.GetLatestQrContent();
 
-        if (redirect is true)
+        if (redirect is true || qrContents.Count() == 1)
         {
             var link = qrContents.FirstOrDefault(x => x.Type == QrContentType.Link);
             if (link is not null)
@@ -76,11 +81,11 @@ public static class NDeyeEndpoints
             return Results.NotFound();
         }
 
-        var htmlString = BuildQrHtml(qrContents);
+        var htmlString = BuildQrHtml(qrContents, timestamps);
         return Results.Content(htmlString, "text/html; charset=utf-8");
     }
 
-    private static string BuildQrHtml(List<QrContent> qrContents)
+    private static string BuildQrHtml(IEnumerable<QrContent> qrContents, bool printTimestamps)
     {
         var sb = new StringBuilder();
 
@@ -104,14 +109,15 @@ public static class NDeyeEndpoints
         foreach (var item in qrContents)
         {
             var encoded = WebUtility.HtmlEncode(item.Content);
-
+            var ts = "";
+            if (printTimestamps) { ts = $" ({item.Timestamp})"; }
             if (item.Type == QrContentType.Link)
             {
-                sb.Append($"<div class=\"item\"><a href=\"{encoded}\" target=\"_blank\">{encoded}</a></div>");
+                sb.Append($"<div class=\"item\"><a href=\"{encoded}\" target=\"_blank\">{encoded}</a>{ts}</div>");
             }
             else
             {
-                sb.Append($"<div class=\"item\">{encoded}</div>");
+                sb.Append($"<div class=\"item\">{encoded}{ts}</div>");
             }
         }
 

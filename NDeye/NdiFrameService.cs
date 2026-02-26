@@ -27,7 +27,7 @@ public partial class NdiFrameService : BackgroundService
     private readonly object _lock = new();
 
     private byte[]? _latestFrame;
-    private List<QrContent> _qrContents = [];
+    private IEnumerable<QrContent> _qrContents = [];
     private NdiReceiver? _receiver;
 
     public bool IsAvailable { get; private set; }
@@ -86,17 +86,16 @@ public partial class NdiFrameService : BackgroundService
                     imageData.Frame is not null)
                 {
 
-                    var link = DecodeQr(imageData.Image);
+                    var links = DecodeQr(imageData.Image);
                     // var png = EncodePng(frame);
                     var png = imageData.Frame;
 
                     lock (_lock)
                     {
                         _latestFrame = png;
-                        if (link.Count > 0)
-                        {
-                            _qrContents = link;
-                        }
+                        _qrContents = links
+                                            .UnionBy(_qrContents, x => x.Content)                                       
+                                            .Where(x => x.Timestamp > DateTimeOffset.UtcNow.AddMinutes(-5));
                     }
 
                     IsAvailable = true;
@@ -124,6 +123,13 @@ public partial class NdiFrameService : BackgroundService
         }
     }
 
+    private static readonly List<string> s_validLinkSchemes = [
+        Uri.UriSchemeHttp,
+        Uri.UriSchemeHttps,
+        Uri.UriSchemeMailto,
+        Uri.UriSchemeFile,
+    ];
+
     internal static List<QrContent> DecodeQr(Image<Bgra32> image)
     {
         var result = new List<QrContent>();
@@ -140,19 +146,28 @@ public partial class NdiFrameService : BackgroundService
             }
         };
 
-        // TODO: Enable multiple qr codes
-
-        // TODO: Check here for valid HTTP url
-        var decoded = reader.Decode(image);
+        var decoded = reader.DecodeMultiple(image);
         if (decoded is not null)
         {
-            result.Add(new(QrContentType.Link, decoded.Text));
+            foreach (var text in decoded)
+            {
+                if (Uri.TryCreate(text.Text, uriKind: UriKind.Absolute, out var uriResult)
+                && s_validLinkSchemes.Contains(uriResult.Scheme))
+                {
+                    result.Add(new(QrContentType.Link, text.Text));
+                }
+                else
+                {
+                    result.Add(new QrContent(QrContentType.Text, text.Text));
+                }
+
+            }
         }
 
         return result;
     }
 
-    internal List<QrContent> GetLatestQrContent()
+    internal IEnumerable<QrContent> GetLatestQrContent()
     {
         lock (_lock)
         {

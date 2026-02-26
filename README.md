@@ -7,8 +7,9 @@ Both, the image and any found qr contents will be provided to the user as HTTP e
 Returns the image as PNG.
 With an optional query parameter `?download=true`, a direct download of the image can be requested
 ### /qr
-All found QR code contents are displayed (links are clickable).
-With an additional query parameter `?redirect=true`, the user agent is redirected to the first found link if any
+Found QR code contents in a given timeframe (default = 1 min) are displayed (links are clickable).
+- Parameter `?redirect=true`: The user agent is redirected to the first found link if any
+- Parameter `?timestamps=true`, the last-seen timestamp is displayed behind the contents
 
 ## Configuration
 The NDI&trade; source name can be passed in appsettings.json, or alternatively as environment variable `Ndi__SourceName`.
