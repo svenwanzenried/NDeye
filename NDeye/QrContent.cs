@@ -13,17 +13,19 @@ namespace NDeye;
 
 internal class QrContent
 {
-    public QrContent(QrContentType type, string content, DateTimeOffset? timestamp = null)
+    public QrContent(QrContentType type, string content, string? thumbnail = "", DateTimeOffset? timestamp = null)
     {
         if (timestamp is null) { Timestamp = DateTimeOffset.UtcNow; }
         else { Timestamp = (DateTimeOffset)timestamp; }
 
         Type = type;
         Content = content;
+        ThumbnailDataUri = thumbnail;
     }
 
     public QrContentType Type { get; }
     public DateTimeOffset Timestamp { get; }
     public string Content { get; }
+    public string? ThumbnailDataUri {get;}
 }
 

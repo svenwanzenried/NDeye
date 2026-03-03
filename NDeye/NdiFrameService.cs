@@ -13,7 +13,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using ZXing;
 
 namespace NDeye;
@@ -146,19 +148,28 @@ public partial class NdiFrameService : BackgroundService
             }
         };
 
+        using var ms = new MemoryStream();
+        var thumbnail = image.Clone((ipc) => ipc.Resize(new ResizeOptions()
+        {
+            Size = new Size(256,256),
+            Mode = ResizeMode.Max
+        })).ToBase64String(PngFormat.Instance);
+        
+
         var decoded = reader.DecodeMultiple(image);
+
         if (decoded is not null)
         {
-            foreach (var text in decoded)
+            foreach (var qr in decoded)
             {
-                if (Uri.TryCreate(text.Text, uriKind: UriKind.Absolute, out var uriResult)
+                if (Uri.TryCreate(qr.Text, uriKind: UriKind.Absolute, out var uriResult)
                 && s_validLinkSchemes.Contains(uriResult.Scheme))
                 {
-                    result.Add(new(QrContentType.Link, text.Text));
+                    result.Add(new(QrContentType.Link, qr.Text, thumbnail));
                 }
                 else
                 {
-                    result.Add(new QrContent(QrContentType.Text, text.Text));
+                    result.Add(new QrContent(QrContentType.Text, qr.Text, thumbnail));
                 }
 
             }

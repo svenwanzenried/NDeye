@@ -13,6 +13,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using NDeye;
+using NDeye.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,10 +23,13 @@ builder.Services.Configure<NdiOptions>(
 builder.Services.AddSingleton<NdiFrameService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<NdiFrameService>());
 
+builder.Services.AddRazorComponents();
 
 var app = builder.Build();
 
+app.UseAntiforgery();
 app.MapNDeyeEndpoints();
+app.MapRazorComponents<App>();
 
 try
 {

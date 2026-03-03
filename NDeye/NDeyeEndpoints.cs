@@ -24,7 +24,7 @@ public static class NDeyeEndpoints
     public static void MapNDeyeEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/snapshot", SnapshotHandler);
-        app.MapGet("/qr", QrHandler);
+        // app.MapGet("/qr", QrHandler);
     }
 
     private static async Task<IResult> SnapshotHandler(
